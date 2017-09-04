@@ -1,6 +1,7 @@
 const puppeteer = require('puppeteer');
 const Spinner = require('cli-spinner').Spinner;
 const rimraf = require('rimraf');
+const fs = require('fs');
 
 
 //EDIT HERE
@@ -9,18 +10,23 @@ const URL = 'http://naiin.com';
 const INTERVAL = 5000;
 
 
+rimraf.sync('output/*', { glob: true });
+try {
+	fs.mkdirSync('output');
+} catch (e) {}
+
+
 (async() => {
 	const spinner = new Spinner('processing.. %s');
 	spinner.setSpinnerString('|/-\\');
 	spinner.start();
 
-	rimraf.sync('output/*', { glob: true });
-
-	const browser = await puppeteer.launch();
-	const page = await browser.newPage();
 	var totalTime = 0;
 
 	for (var i = 0; i < nTest; i++) {
+		var browser = await puppeteer.launch();
+		var page = await browser.newPage();
+
 		var start = Date.now();
 		var count = 0;
 
@@ -34,9 +40,10 @@ const INTERVAL = 5000;
 		totalTime += Date.now() - start;
 
 		await page.screenshot({ path: `output/screenshot${i+1}_final.png`, fullPage: true });
+		await page.close();
+		browser.close();
 	}
 
-	browser.close();
 	spinner.stop(true);
 
 	console.log('url: ' + URL);
